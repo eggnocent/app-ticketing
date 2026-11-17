@@ -32,7 +32,14 @@
                             <a href="{{ route('admin.tickets.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
                                 Tiket
                             </a>
+                            <a href="{{ route('admin.registrations.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                                Pendaftaran
+                            </a>
                         @endif
+
+                        <a href="{{ route('registrations.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                            Pesanan Saya
+                        </a>
 
                         <span class="text-slate-500">{{ auth()->user()->name }}</span>
 

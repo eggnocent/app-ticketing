@@ -60,6 +60,24 @@
             </div>
         </section>
 
+        @php($eventEnded = $event->end_time?->isPast())
+
+        <div class="flex flex-wrap items-center gap-2">
+            @if ($eventEnded)
+                <span class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-500">
+                    Penjualan ditutup
+                </span>
+            @elseif (auth()->check())
+                <a href="{{ route('checkout.create', $event->slug) }}" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+                    Beli Tiket
+                </a>
+            @else
+                <a href="{{ route('login') }}" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+                    Login untuk membeli tiket
+                </a>
+            @endif
+        </div>
+
         <a href="{{ route('events.index') }}" class="inline-block rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">
             Kembali ke daftar event
         </a>
