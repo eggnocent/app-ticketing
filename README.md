@@ -176,11 +176,5 @@ app/Modules/
     └── Views/            # Blade Views (checkout, history, admin)
 ```
 
----
 
-## 8. Tautan Dokumentasi Terkait
 
-* **Keputusan Arsitektur:** [docs/decisions/001-architecture.md](docs/decisions/001-architecture.md)
-* **Kamus Data & ERD Lengkap:** [docs/DATA_DICTIONARY_DAN_ERD.md](docs/DATA_DICTIONARY_DAN_ERD.md)
-* **Panduan Pengujian & Akses:** [docs/PANDUAN_AKSES_GITHUB_DAN_PENGUJIAN.md](docs/PANDUAN_AKSES_GITHUB_DAN_PENGUJIAN.md)
-* **Bukti Artefak & Screenshot:** Direktori `docs/evidence/`
