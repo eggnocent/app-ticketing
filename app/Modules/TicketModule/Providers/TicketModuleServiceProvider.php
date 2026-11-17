@@ -2,13 +2,15 @@
 
 namespace App\Modules\TicketModule\Providers;
 
+use App\Modules\TicketModule\Contracts\TicketInventoryContract;
+use App\Modules\TicketModule\Services\TicketInventoryService;
 use Illuminate\Support\ServiceProvider;
 
 class TicketModuleServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(TicketInventoryContract::class, TicketInventoryService::class);
     }
 
     public function boot(): void
