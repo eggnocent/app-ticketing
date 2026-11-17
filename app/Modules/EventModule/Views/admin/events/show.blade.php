@@ -10,6 +10,14 @@
                     <p class="text-xs uppercase tracking-wide text-slate-500">{{ $event->category?->name }}</p>
                     <h1 class="text-2xl font-semibold">{{ $event->title }}</h1>
                     <p class="mt-1 text-sm text-slate-500">{{ $event->slug }}</p>
+
+                    @if ($event->tags->isNotEmpty())
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            @foreach ($event->tags as $tag)
+                                <span class="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600">{{ $tag->name }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                     {{ $event->status }}

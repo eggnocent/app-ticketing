@@ -6,7 +6,7 @@ use App\Modules\RegistrationModule\Controllers\RegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('web')->group(function () {
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'role:peserta'])->group(function () {
         Route::get('/checkout/{eventSlug}', [CheckoutController::class, 'create'])
             ->name('checkout.create');
         Route::post('/checkout', [CheckoutController::class, 'store'])

@@ -34,6 +34,7 @@
                 class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
             >
                 @csrf
+                <input type="hidden" name="idempotency_key" value="{{ old('idempotency_key', $idempotencyKey) }}">
 
                 <h2 class="text-lg font-semibold">Pilih Tiket</h2>
                 <p class="mt-1 text-sm text-slate-500">Total dihitung dari harga database saat checkout.</p>

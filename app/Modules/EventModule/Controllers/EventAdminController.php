@@ -5,11 +5,13 @@ namespace App\Modules\EventModule\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\EventModule\Models\Category;
 use App\Modules\EventModule\Models\Event;
+use App\Modules\EventModule\Models\Tag;
 use App\Modules\EventModule\Requests\StoreEventRequest;
 use App\Modules\EventModule\Requests\UpdateEventRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -35,20 +37,23 @@ class EventAdminController extends Controller
     public function create(): View
     {
         $categories = Category::query()->orderBy('name')->get();
+        $tags = Tag::query()->orderBy('name')->get();
 
-        return view('event::admin.events.create', compact('categories'));
+        return view('event::admin.events.create', compact('categories', 'tags'));
     }
 
     public function store(StoreEventRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['banner']);
+        $tagIds = $data['tags'] ?? [];
+        unset($data['banner'], $data['tags']);
 
         if ($request->hasFile('banner')) {
             $data['banner_path'] = $request->file('banner')->store('banners', 'public');
         }
 
-        Event::create($data);
+        $event = Event::create($data);
+        $event->tags()->sync($tagIds);
 
         return redirect()->route('admin.events.index')
             ->with('success', 'Event berhasil dibuat.');
@@ -56,7 +61,7 @@ class EventAdminController extends Controller
 
     public function show(Event $event): View
     {
-        $event->load('category');
+        $event->load(['category', 'tags']);
 
         return view('event::admin.events.show', compact('event'));
     }
@@ -64,14 +69,18 @@ class EventAdminController extends Controller
     public function edit(Event $event): View
     {
         $categories = Category::query()->orderBy('name')->get();
+        $tags = Tag::query()->orderBy('name')->get();
 
-        return view('event::admin.events.edit', compact('event', 'categories'));
+        $event->load('tags');
+
+        return view('event::admin.events.edit', compact('event', 'categories', 'tags'));
     }
 
     public function update(UpdateEventRequest $request, Event $event): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['banner']);
+        $tagIds = $data['tags'] ?? [];
+        unset($data['banner'], $data['tags']);
 
         if ($request->hasFile('banner')) {
             if ($event->banner_path) {
@@ -82,6 +91,7 @@ class EventAdminController extends Controller
         }
 
         $event->update($data);
+        $event->tags()->sync($tagIds);
 
         return redirect()->route('admin.events.index')
             ->with('success', 'Event berhasil diperbarui.');
@@ -90,7 +100,10 @@ class EventAdminController extends Controller
     public function destroy(Event $event): RedirectResponse
     {
         try {
-            $event->delete();
+            DB::transaction(function () use ($event): void {
+                $event->tags()->detach();
+                $event->delete();
+            });
         } catch (QueryException) {
             return back()->with('error', 'Event masih memiliki data terkait sehingga tidak bisa dihapus.');
         }

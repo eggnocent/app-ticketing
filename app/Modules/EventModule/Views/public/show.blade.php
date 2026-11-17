@@ -13,6 +13,14 @@
                 <p class="text-xs uppercase tracking-wide text-slate-500">{{ $event->category?->name }}</p>
                 <h1 class="mt-1 text-3xl font-semibold">{{ $event->title }}</h1>
 
+                @if ($event->tags->isNotEmpty())
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @foreach ($event->tags as $tag)
+                            <span class="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600">{{ $tag->name }}</span>
+                        @endforeach
+                    </div>
+                @endif
+
                 <dl class="mt-6 grid gap-4 text-sm sm:grid-cols-2">
                     <div>
                         <dt class="text-slate-500">Lokasi</dt>
@@ -67,9 +75,16 @@
                 <span class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-500">
                     Penjualan ditutup
                 </span>
-            @elseif (auth()->check())
+            @elseif (auth()->check() && auth()->user()->role === 'peserta')
                 <a href="{{ route('checkout.create', $event->slug) }}" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
                     Beli Tiket
+                </a>
+            @elseif (auth()->check())
+                <span class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm text-slate-500">
+                    Akun admin tidak dapat membeli tiket.
+                </span>
+                <a href="{{ route('admin.tickets.index') }}" class="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">
+                    Kelola Tiket
                 </a>
             @else
                 <a href="{{ route('login') }}" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">

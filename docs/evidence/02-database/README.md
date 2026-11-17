@@ -11,8 +11,9 @@ Folder ini digunakan untuk menampung berkas tangkapan layar (*screenshot*) yang 
 |---|---|---|---|
 | `02-01-migration-status.png` | Output terminal daftar migrasi berstatus `Ran` | `php artisan migrate:status` | BAB III — Subbab 3.2 (Manajemen Database) |
 | `02-02-seeder-execution.png` | Output terminal seeder berhasil mengisi data dummy | `php artisan migrate:fresh --seed` | BAB III — Subbab 3.2 (Seeder & Factory) |
-| `02-03-database-tables-erd.png` | Struktur 8 tabel UUID di GUI database (DBeaver / TablePlus / phpMyAdmin / DB Browser SQLite) | GUI Database Client | BAB II — Subbab 2.2 (Entity Relationship Diagram) |
+| `02-03-database-tables-erd.png` | Struktur 10 tabel UUID di GUI database (DBeaver / TablePlus / phpMyAdmin / DB Browser SQLite) | GUI Database Client | BAB II — Subbab 2.2 (Entity Relationship Diagram) |
 | `02-04-pivot-table-registration-tickets.png` | Isi tabel pivot `registration_tickets` dengan snapshot harga | GUI Database / `SELECT * FROM registration_tickets` | BAB III — Subbab 3.3 (Relasi Many-to-Many Pivot) |
+| `02-05-pivot-table-event-tag.png` | Isi tabel pivot `event_tag` dengan UUID, pasangan unik, dan kolom audit | GUI Database / `SELECT * FROM event_tag` | BAB III — Subbab 3.3 (Relasi Many-to-Many Eloquent) |
 
 ---
 

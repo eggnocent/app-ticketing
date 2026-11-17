@@ -96,6 +96,33 @@ class CheckoutTest extends TestCase
         $this->assertSame(2, $available->refresh()->remaining_quota);
     }
 
+    public function test_second_checkout_fails_when_only_the_last_seat_is_available(): void
+    {
+        $event = EventModel::factory()->published()->create();
+        $ticket = Ticket::factory()->forEvent($event->id)->create([
+            'initial_quota' => 1,
+            'remaining_quota' => 1,
+        ]);
+        $firstUser = User::factory()->create();
+        $secondUser = User::factory()->create();
+
+        $this->actingAs($firstUser)
+            ->post(route('checkout.store'), [
+                'quantities' => [$ticket->id => 1],
+            ])
+            ->assertRedirect();
+
+        $this->actingAs($secondUser)
+            ->post(route('checkout.store'), [
+                'quantities' => [$ticket->id => 1],
+            ])
+            ->assertSessionHas('error');
+
+        $this->assertSame(0, $ticket->refresh()->remaining_quota);
+        $this->assertSame(1, Registration::query()->count());
+        $this->assertSame(1, IssuedTicket::query()->count());
+    }
+
     public function test_checkout_rejects_a_draft_event(): void
     {
         $user = User::factory()->create();

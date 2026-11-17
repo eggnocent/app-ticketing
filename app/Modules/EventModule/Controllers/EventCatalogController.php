@@ -15,7 +15,7 @@ class EventCatalogController extends Controller
     {
         $events = Event::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'tags'])
             ->orderBy('start_time')
             ->paginate(9);
 
@@ -26,7 +26,7 @@ class EventCatalogController extends Controller
     {
         $event = Event::query()
             ->published()
-            ->with('category')
+            ->with(['category', 'tags'])
             ->where('slug', $slug)
             ->firstOrFail();
 

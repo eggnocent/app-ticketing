@@ -11,7 +11,7 @@ Dokumen ini disusun untuk **Muhammad Imam Panji Prasetya** (`panjiprasetyaa`) se
 - **Status Penggabungan (Merge):**
   Pull Request #1 (`feat - working for p1.5-p16`) dari `eggnocent` telah berhasil di-fetch ke branch lokal `pr-1-eggnocent`, diuji, dan di-merge dengan aman ke branch `main`.
 - **Hasil Verifikasi Otomatis:**
-  - **Automated Tests:** **80 passed**, 225 assertions (0 failed, 0 errors).
+  - **Automated Tests:** **100 passed** pada MariaDB 10.11 (0 failed, 0 errors, termasuk `ConcurrentCheckoutTest`). Pada SQLite, 99 lulus dan 1 di-skip karena SQLite tidak menjalankan row lock MySQL.
   - **Laravel Pint:** **Passed** (100% PSR-12 / Laravel code style).
   - **Database Migration & Seeder:** Berjalan lancar (termasuk 3 modul, relasi 1-N, dan tabel pivot M-N `registration_tickets`).
   - **Vite Asset Build:** Compiled (`manifest.json` terbuat di `public/build/`).
@@ -140,5 +140,5 @@ Folder penyimpanan bukti telah dibuat di `d:\uts BE\app-ticketing\docs\evidence\
 4. `04-event/`: Screenshot daftar event publik dan form kelola event admin.
 5. `05-ticket/`: Screenshot daftar tiket dan modal/form edit kuota tiket.
 6. `06-checkout/`: Screenshot halaman checkout, tampilan E-Ticket dengan kode tiket unik, serta screenshot alert rollback `TicketQuotaExceededException`.
-7. `07-tests/`: Screenshot terminal `php artisan test` dengan output **80 passed** berwarna hijau.
+7. `07-tests/`: Screenshot terminal `php artisan test` pada MariaDB dengan output **100 passed**, termasuk bukti T16.
 8. `08-git/`: Screenshot terminal menjalankan `git log --oneline --graph`.
