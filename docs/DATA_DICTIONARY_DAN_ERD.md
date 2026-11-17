@@ -32,6 +32,8 @@ erDiagram
     REGISTRATIONS ||--|{ REGISTRATION_TICKETS : includes
     TICKETS ||--o{ REGISTRATION_TICKETS : booked_in
     REGISTRATION_TICKETS ||--|{ ISSUED_TICKETS : generates
+    EVENTS ||--o{ EVENT_TAG : tagged_with
+    TAGS ||--o{ EVENT_TAG : labels
 
     USERS {
         uuid id PK
@@ -128,6 +130,26 @@ erDiagram
         timestamp updated_at
         uuid updated_by FK
     }
+
+    TAGS {
+        uuid id PK
+        string name
+        string slug UK
+        timestamp created_at
+        uuid created_by FK
+        timestamp updated_at
+        uuid updated_by FK
+    }
+
+    EVENT_TAG {
+        uuid id PK
+        uuid event_id FK
+        uuid tag_id FK
+        timestamp created_at
+        uuid created_by FK
+        timestamp updated_at
+        uuid updated_by FK
+    }
 ```
 
 ---
@@ -141,6 +163,7 @@ erDiagram
 | `users` | **1 : N** | `registrations` | One-to-Many | `registrations.user_id` | Satu user peserta dapat melakukan banyak transaksi registrasi/pemesanan. |
 | `registrations` | **N : M** | `tickets` | **Many-to-Many dengan Pivot** | Tabel pivot: `registration_tickets` | Satu pesanan dapat membeli beberapa jenis tiket, dan satu jenis tiket dapat dibeli dalam banyak transaksi pesanan. |
 | `registration_tickets` | **1 : N** | `issued_tickets` | One-to-Many | `issued_tickets.registration_ticket_id` | Satu baris pembelian tiket dengan `quantity = n` akan menerbitkan tepat `n` tiket individual ber-kode unik. |
+| `events` | **N : M** | `tags` | **Many-to-Many dengan Pivot** | Tabel pivot: `event_tag` | Satu event dapat memiliki beberapa tag, dan satu tag dapat dipakai banyak event. Relasi dibuktikan dengan `Event::tags()` dan `Tag::events()` memakai custom pivot `EventTag`. |
 
 ---
 
@@ -230,7 +253,7 @@ Header transaksi pemesanan tiket oleh peserta.
 | 1 | `id` | UUID (char 36) | NO | PK | — | Identifier unik pesanan |
 | 2 | `user_id` | UUID (char 36) | NO | FK | — | Referensi ke `users.id` (pemesan) |
 | 3 | `invoice_number`| VARCHAR(255) | NO | UNIQUE | — | Nomor tagihan/invoice unik (`INV-YYYYMMDD-XXXX`) |
-| 4 | `idempotency_key`| VARCHAR(255) | YES | — | NULL | Mencegah double-checkout pada koneksi lambat |
+| 4 | `idempotency_key`| VARCHAR(255) | YES | UNIQUE bersama `user_id` | NULL | Kunci idempotensi checkout. Kombinasi `user_id` dan `idempotency_key` unik, sehingga pengiriman ulang mengembalikan pesanan yang sama. |
 | 5 | `total_rupiah` | BIGINT | NO | — | 0 | Total nominal pembayaran transaksi |
 | 6 | `status` | VARCHAR(50) | NO | — | `'completed'`| Status transaksi (simulasi checkout berhasil) |
 | 7 | `confirmed_at` | DATETIME | YES | — | NULL | Waktu konfirmasi checkout berhasil |
@@ -274,3 +297,35 @@ Menyimpan identitas fisik 1 tiket individual yang diterbitkan beserta kode tiket
 | 7 | `created_by` | UUID (char 36) | YES | FK | NULL | Aktor penerbitan tiket |
 | 8 | `updated_at` | TIMESTAMP | YES | — | NULL | Waktu update tiket |
 | 9 | `updated_by` | UUID (char 36) | YES | FK | NULL | Aktor update tiket |
+
+---
+
+### 4.8 Tabel: `tags` (EventModule)
+Master data tag untuk mengelompokkan event. Tabel ini menjadi bukti relasi Many-to-Many Eloquent di dalam `EventModule`.
+
+| No | Nama Kolom | Tipe Data | Nullable | Kunci | Default | Deskripsi Bisnis |
+|:--:|---|---|:---:|:---:|---|---|
+| 1 | `id` | UUID (char 36) | NO | PK | — | Identifier unik tag |
+| 2 | `name` | VARCHAR(255) | NO | — | — | Nama tag |
+| 3 | `slug` | VARCHAR(255) | NO | UNIQUE | — | Slug unik tag |
+| 4 | `created_at` | TIMESTAMP | YES | — | NULL | Waktu pembuatan tag |
+| 5 | `created_by` | UUID (char 36) | YES | FK | NULL | Admin pembuat tag |
+| 6 | `updated_at` | TIMESTAMP | YES | — | NULL | Waktu pembaruan tag |
+| 7 | `updated_by` | UUID (char 36) | YES | FK | NULL | Admin pembaru tag |
+
+---
+
+### 4.9 Tabel: `event_tag` (EventModule, pivot Many-to-Many)
+Pivot relasi `events` dan `tags` dengan UUID surrogate, unique pair, dan lima kolom audit.
+
+| No | Nama Kolom | Tipe Data | Nullable | Kunci | Default | Deskripsi Bisnis |
+|:--:|---|---|:---:|:---:|---|---|
+| 1 | `id` | UUID (char 36) | NO | PK | — | Identifier unik baris pivot |
+| 2 | `event_id` | UUID (char 36) | NO | FK | — | Referensi ke `events.id` |
+| 3 | `tag_id` | UUID (char 36) | NO | FK | — | Referensi ke `tags.id` |
+| 4 | `created_at` | TIMESTAMP | YES | — | NULL | Waktu pemasangan tag |
+| 5 | `created_by` | UUID (char 36) | YES | FK | NULL | Admin yang memasang tag |
+| 6 | `updated_at` | TIMESTAMP | YES | — | NULL | Waktu pembaruan pivot |
+| 7 | `updated_by` | UUID (char 36) | YES | FK | NULL | Admin yang memperbarui pivot |
+
+Kombinasi `event_id` dan `tag_id` memiliki unique constraint. Model `EventTag` memakai trait `HasUuids` dan `HasAudit`, sehingga `attach()` dan `sync()` tetap mengisi UUID, `created_by`, dan `updated_by` dari aktor yang sedang login.

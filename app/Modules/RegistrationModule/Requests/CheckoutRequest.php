@@ -40,6 +40,7 @@ class CheckoutRequest extends FormRequest
             'items' => ['required', 'array', 'min:1', 'max:10'],
             'items.*.ticket_id' => ['required', 'uuid', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:10'],
+            'idempotency_key' => ['nullable', 'uuid'],
         ];
     }
 

@@ -27,6 +27,8 @@ class UpdateEventRequest extends FormRequest
             'end_time' => ['required', 'date', 'after:start_time'],
             'status' => ['required', 'in:draft,published,cancelled'],
             'banner' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['uuid', 'distinct', 'exists:tags,id'],
         ];
     }
 }

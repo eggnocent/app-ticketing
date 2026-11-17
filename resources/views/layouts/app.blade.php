@@ -37,9 +37,11 @@
                             </a>
                         @endif
 
-                        <a href="{{ route('registrations.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
-                            Pesanan Saya
-                        </a>
+                        @unless (auth()->user()->isAdmin())
+                            <a href="{{ route('registrations.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                                Pesanan Saya
+                            </a>
+                        @endunless
 
                         <span class="text-slate-500">{{ auth()->user()->name }}</span>
 

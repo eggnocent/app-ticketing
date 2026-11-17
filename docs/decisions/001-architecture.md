@@ -38,7 +38,7 @@ Aturan dependency:
 - Uang disimpan sebagai integer rupiah (`price_rupiah`, `total_rupiah`, `unit_price_rupiah`, `subtotal_rupiah`), bukan float.
 - `ticket_code` dan `invoice_number` adalah string unik terpisah, bukan UUID.
 
-Urutan migrasi: `users` → `categories` → `events` → `tickets` → `registrations` → `registration_tickets` → `issued_tickets`.
+Urutan migrasi: `users` → `categories` → `events` → `tickets` → `registrations` → `registration_tickets` → `issued_tickets` → `tags` → `event_tag`.
 
 ## Status dan aturan bisnis
 
@@ -77,6 +77,7 @@ interface TicketInventoryContract
 - Role `admin` dan `peserta`; role default `peserta` ditentukan server.
 - Input `role` dari register diabaikan.
 - Route admin memakai middleware `web`, `auth`, `role:admin`.
+- Route checkout dan riwayat peserta memakai `role:peserta`. Admin tidak dapat membeli tiket atau membuka halaman riwayat peserta.
 - Ownership record (registrasi/e-ticket) tetap dicek di controller/service, bukan hanya middleware role.
 
 ## Git dan kualitas

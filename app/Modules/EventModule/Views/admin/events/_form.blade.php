@@ -1,4 +1,5 @@
 @php($editing = isset($event))
+@php($selectedTags = old('tags', $editing ? $event->tags->pluck('id')->all() : []))
 
 <form
     method="POST"
@@ -61,6 +62,37 @@
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
+
+        <fieldset class="sm:col-span-2">
+            <legend class="block text-sm font-medium text-slate-700">Tag</legend>
+            <p class="mt-1 text-sm text-slate-500">Pilih satu atau lebih tag untuk mengelompokkan event.</p>
+
+            @if ($tags->isEmpty())
+                <p class="mt-2 text-sm text-slate-500">Belum ada tag. Tambahkan tag terlebih dahulu lewat seeder atau data master.</p>
+            @else
+                <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                    @foreach ($tags as $tag)
+                        <label class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm">
+                            <input
+                                type="checkbox"
+                                name="tags[]"
+                                value="{{ $tag->id }}"
+                                @checked(in_array($tag->id, $selectedTags, true))
+                                class="h-4 w-4 rounded border-slate-300"
+                            >
+                            <span>{{ $tag->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            @endif
+
+            @error('tags')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+            @error('tags.*')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </fieldset>
 
         <div>
             <label for="location" class="block text-sm font-medium text-slate-700">Lokasi</label>

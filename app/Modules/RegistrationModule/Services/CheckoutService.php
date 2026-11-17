@@ -9,6 +9,7 @@ use App\Modules\RegistrationModule\Models\IssuedTicket;
 use App\Modules\RegistrationModule\Models\Registration;
 use App\Modules\RegistrationModule\Models\RegistrationTicket;
 use App\Modules\TicketModule\Contracts\TicketInventoryContract;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -22,10 +23,18 @@ class CheckoutService
     /**
      * @param  array<int, array{ticket_id: string, quantity: int}>  $items
      */
-    public function process(string $userId, array $items): Registration
+    public function process(string $userId, array $items, ?string $idempotencyKey = null): Registration
     {
         if ($items === []) {
             throw new CheckoutFailedException('Pilih minimal satu tiket.');
+        }
+
+        if ($idempotencyKey !== null) {
+            $existing = $this->findExistingRegistration($userId, $idempotencyKey);
+
+            if ($existing) {
+                return $existing;
+            }
         }
 
         $items = collect($items)
@@ -41,69 +50,91 @@ class CheckoutService
             throw new CheckoutFailedException('Jenis tiket tidak boleh duplikat.');
         }
 
-        return DB::transaction(function () use ($userId, $items): Registration {
-            $prepared = [];
-            $total = 0;
-            $eventId = null;
+        try {
+            return DB::transaction(function () use ($userId, $items, $idempotencyKey): Registration {
+                $prepared = [];
+                $total = 0;
+                $eventId = null;
 
-            foreach ($items as $item) {
-                if ($item['quantity'] < 1 || $item['quantity'] > 10) {
-                    throw new CheckoutFailedException('Jumlah tiket harus antara 1 dan 10.');
+                foreach ($items as $item) {
+                    if ($item['quantity'] < 1 || $item['quantity'] > 10) {
+                        throw new CheckoutFailedException('Jumlah tiket harus antara 1 dan 10.');
+                    }
+
+                    $snapshot = $this->inventory->reserve($item['ticket_id'], $item['quantity']);
+
+                    if ($eventId === null) {
+                        $eventId = $snapshot['event_id'];
+                    } elseif ($eventId !== $snapshot['event_id']) {
+                        throw new CheckoutFailedException('Satu checkout hanya untuk satu event.');
+                    }
+
+                    if (! $this->events->isPurchasable($eventId)) {
+                        throw new CheckoutFailedException('Event tidak tersedia untuk pembelian.');
+                    }
+
+                    $subtotal = $snapshot['price_rupiah'] * $item['quantity'];
+
+                    $prepared[] = [
+                        'snapshot' => $snapshot,
+                        'quantity' => $item['quantity'],
+                        'subtotal' => $subtotal,
+                    ];
+
+                    $total += $subtotal;
                 }
 
-                $snapshot = $this->inventory->reserve($item['ticket_id'], $item['quantity']);
-
-                if ($eventId === null) {
-                    $eventId = $snapshot['event_id'];
-                } elseif ($eventId !== $snapshot['event_id']) {
-                    throw new CheckoutFailedException('Satu checkout hanya untuk satu event.');
-                }
-
-                if (! $this->events->isPurchasable($eventId)) {
-                    throw new CheckoutFailedException('Event tidak tersedia untuk pembelian.');
-                }
-
-                $subtotal = $snapshot['price_rupiah'] * $item['quantity'];
-
-                $prepared[] = [
-                    'snapshot' => $snapshot,
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $subtotal,
-                ];
-
-                $total += $subtotal;
-            }
-
-            $registration = Registration::create([
-                'user_id' => $userId,
-                'invoice_number' => $this->uniqueInvoiceNumber(),
-                'total_rupiah' => $total,
-                'status' => 'completed',
-                'confirmed_at' => now(),
-            ]);
-
-            foreach ($prepared as $item) {
-                $line = RegistrationTicket::create([
-                    'registration_id' => $registration->id,
-                    'ticket_id' => $item['snapshot']['id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price_rupiah' => $item['snapshot']['price_rupiah'],
-                    'subtotal_rupiah' => $item['subtotal'],
+                $registration = Registration::create([
+                    'user_id' => $userId,
+                    'invoice_number' => $this->uniqueInvoiceNumber(),
+                    'idempotency_key' => $idempotencyKey,
+                    'total_rupiah' => $total,
+                    'status' => 'completed',
+                    'confirmed_at' => now(),
                 ]);
 
-                for ($i = 0; $i < $item['quantity']; $i++) {
-                    IssuedTicket::create([
-                        'registration_ticket_id' => $line->id,
-                        'ticket_code' => $this->uniqueTicketCode(),
-                        'status' => 'valid',
+                foreach ($prepared as $item) {
+                    $line = RegistrationTicket::create([
+                        'registration_id' => $registration->id,
+                        'ticket_id' => $item['snapshot']['id'],
+                        'quantity' => $item['quantity'],
+                        'unit_price_rupiah' => $item['snapshot']['price_rupiah'],
+                        'subtotal_rupiah' => $item['subtotal'],
                     ]);
+
+                    for ($i = 0; $i < $item['quantity']; $i++) {
+                        IssuedTicket::create([
+                            'registration_ticket_id' => $line->id,
+                            'ticket_code' => $this->uniqueTicketCode(),
+                            'status' => 'valid',
+                        ]);
+                    }
+                }
+
+                TicketPurchasedEvent::dispatch($registration->id);
+
+                return $registration->load('registrationTickets.issuedTickets');
+            }, attempts: 3);
+        } catch (UniqueConstraintViolationException $exception) {
+            if ($idempotencyKey !== null) {
+                $existing = $this->findExistingRegistration($userId, $idempotencyKey);
+
+                if ($existing) {
+                    return $existing;
                 }
             }
 
-            TicketPurchasedEvent::dispatch($registration->id);
+            throw $exception;
+        }
+    }
 
-            return $registration->load('registrationTickets.issuedTickets');
-        }, attempts: 3);
+    private function findExistingRegistration(string $userId, string $idempotencyKey): ?Registration
+    {
+        return Registration::query()
+            ->where('user_id', $userId)
+            ->where('idempotency_key', $idempotencyKey)
+            ->with('registrationTickets.issuedTickets')
+            ->first();
     }
 
     private function uniqueInvoiceNumber(): string

@@ -8,6 +8,7 @@ use App\Modules\RegistrationModule\Requests\CheckoutRequest;
 use App\Modules\RegistrationModule\Services\CheckoutService;
 use App\Modules\TicketModule\Contracts\TicketInventoryContract;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CheckoutController extends Controller
@@ -30,7 +31,9 @@ class CheckoutController extends Controller
             ->values()
             ->all();
 
-        return view('registration::checkout.create', compact('event', 'tickets'));
+        $idempotencyKey = (string) Str::uuid();
+
+        return view('registration::checkout.create', compact('event', 'tickets', 'idempotencyKey'));
     }
 
     public function store(CheckoutRequest $request, CheckoutService $checkout): RedirectResponse
@@ -38,6 +41,7 @@ class CheckoutController extends Controller
         $registration = $checkout->process(
             $request->user()->id,
             $request->validated('items'),
+            $request->validated('idempotency_key'),
         );
 
         return redirect()
