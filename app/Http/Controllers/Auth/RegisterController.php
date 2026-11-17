@@ -23,6 +23,6 @@ class RegisterController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home')->with('success', 'Registrasi berhasil.');
+        return redirect()->route('events.index')->with('success', 'Registrasi berhasil.');
     }
 }

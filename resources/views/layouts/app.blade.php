@@ -14,10 +14,20 @@
                 </a>
 
                 <nav class="flex items-center gap-3 text-sm">
+                    <a href="{{ route('events.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                        Event
+                    </a>
+
                     @auth
                         @if (auth()->user()->isAdmin())
                             <a href="{{ route('admin.dashboard') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
                                 Admin
+                            </a>
+                            <a href="{{ route('admin.events.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                                Kelola Event
+                            </a>
+                            <a href="{{ route('admin.categories.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                                Kategori
                             </a>
                         @endif
 

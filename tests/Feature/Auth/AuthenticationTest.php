@@ -19,7 +19,7 @@ class AuthenticationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertRedirect(route('home'));
+        $response->assertRedirect(route('events.index'));
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'email' => 'peserta.baru@example.test',
@@ -55,7 +55,7 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('home'));
+        $response->assertRedirect(route('events.index'));
         $this->assertAuthenticatedAs($user);
     }
 
