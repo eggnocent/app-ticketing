@@ -4,10 +4,13 @@ namespace App\Modules\EventModule\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\EventModule\Models\Event;
+use App\Modules\TicketModule\Contracts\TicketInventoryContract;
 use Illuminate\View\View;
 
 class EventCatalogController extends Controller
 {
+    public function __construct(private readonly TicketInventoryContract $tickets) {}
+
     public function index(): View
     {
         $events = Event::query()
@@ -27,6 +30,8 @@ class EventCatalogController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
-        return view('event::public.show', compact('event'));
+        $tickets = $this->tickets->getEventTickets($event->id);
+
+        return view('event::public.show', compact('event', 'tickets'));
     }
 }

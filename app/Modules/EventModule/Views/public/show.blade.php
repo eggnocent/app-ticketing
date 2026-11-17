@@ -32,9 +32,32 @@
 
         <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 class="text-lg font-semibold">Tiket</h2>
-            <p class="mt-1 text-sm text-slate-500">
-                Informasi harga dan sisa tiket akan tampil setelah modul tiket diintegrasikan.
-            </p>
+
+            <div class="mt-4 space-y-3">
+                @forelse ($tickets as $ticket)
+                    <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 p-4">
+                        <div>
+                            <p class="font-medium">{{ $ticket['name'] }}</p>
+                            <p class="text-sm text-slate-500">
+                                Penjualan {{ \Illuminate\Support\Carbon::parse($ticket['sales_start'])->format('d M Y H:i') }}
+                                — {{ \Illuminate\Support\Carbon::parse($ticket['sales_end'])->format('d M Y H:i') }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold">Rp {{ number_format($ticket['price_rupiah'], 0, ',', '.') }}</p>
+                            @if ($ticket['remaining_quota'] === 0)
+                                <p class="text-sm font-medium text-red-600">Habis</p>
+                            @elseif (! $ticket['is_on_sale'])
+                                <p class="text-sm text-slate-500">Penjualan ditutup</p>
+                            @else
+                                <p class="text-sm text-slate-500">Sisa {{ $ticket['remaining_quota'] }} tiket</p>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-slate-500">Tiket belum tersedia untuk event ini.</p>
+                @endforelse
+            </div>
         </section>
 
         <a href="{{ route('events.index') }}" class="inline-block rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">

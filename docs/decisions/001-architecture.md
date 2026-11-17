@@ -54,6 +54,7 @@ Urutan migrasi: `users` → `categories` → `events` → `tickets` → `registr
 interface EventInfoContract
 {
     public function getSummary(string $eventId): ?array;
+    public function getEventOptions(): array;
     public function isPurchasable(string $eventId): bool;
 }
 

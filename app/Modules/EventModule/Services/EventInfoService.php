@@ -27,6 +27,20 @@ class EventInfoService implements EventInfoContract
         ];
     }
 
+    public function getEventOptions(): array
+    {
+        return Event::query()
+            ->orderBy('start_time')
+            ->get(['id', 'title', 'slug', 'status'])
+            ->map(fn (Event $event) => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'slug' => $event->slug,
+                'status' => $event->status,
+            ])
+            ->all();
+    }
+
     public function isPurchasable(string $eventId): bool
     {
         return Event::query()

@@ -7,6 +7,7 @@ use App\Modules\EventModule\Models\Category;
 use App\Modules\EventModule\Models\Event;
 use App\Modules\EventModule\Requests\StoreEventRequest;
 use App\Modules\EventModule\Requests\UpdateEventRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -88,11 +89,15 @@ class EventAdminController extends Controller
 
     public function destroy(Event $event): RedirectResponse
     {
+        try {
+            $event->delete();
+        } catch (QueryException) {
+            return back()->with('error', 'Event masih memiliki data terkait sehingga tidak bisa dihapus.');
+        }
+
         if ($event->banner_path) {
             Storage::disk('public')->delete($event->banner_path);
         }
-
-        $event->delete();
 
         return redirect()->route('admin.events.index')
             ->with('success', 'Event berhasil dihapus.');

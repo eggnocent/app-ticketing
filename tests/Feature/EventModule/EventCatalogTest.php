@@ -3,6 +3,7 @@
 namespace Tests\Feature\EventModule;
 
 use App\Modules\EventModule\Models\Event;
+use App\Modules\TicketModule\Models\Ticket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,5 +45,50 @@ class EventCatalogTest extends TestCase
         $event = Event::factory()->cancelled()->create();
 
         $this->get(route('events.show', $event->slug))->assertNotFound();
+    }
+
+    public function test_event_detail_shows_active_ticket_price_and_remaining_quota(): void
+    {
+        $event = Event::factory()->published()->create();
+
+        Ticket::factory()->forEvent($event->id)->create([
+            'name' => 'Tiket VIP',
+            'price_rupiah' => 250000,
+            'remaining_quota' => 7,
+        ]);
+
+        Ticket::factory()->forEvent($event->id)->inactive()->create(['name' => 'Tiket Nonaktif']);
+
+        $this->get(route('events.show', $event->slug))
+            ->assertOk()
+            ->assertSee('Tiket VIP')
+            ->assertSee('Rp 250.000')
+            ->assertSee('Sisa 7 tiket')
+            ->assertDontSee('Tiket Nonaktif');
+    }
+
+    public function test_event_detail_marks_sold_out_ticket(): void
+    {
+        $event = Event::factory()->published()->create();
+
+        Ticket::factory()->forEvent($event->id)->create([
+            'name' => 'Tiket Habis',
+            'initial_quota' => 10,
+            'remaining_quota' => 0,
+        ]);
+
+        $this->get(route('events.show', $event->slug))
+            ->assertOk()
+            ->assertSee('Tiket Habis')
+            ->assertSee('Habis');
+    }
+
+    public function test_event_detail_shows_empty_state_without_tickets(): void
+    {
+        $event = Event::factory()->published()->create();
+
+        $this->get(route('events.show', $event->slug))
+            ->assertOk()
+            ->assertSee('Tiket belum tersedia untuk event ini.');
     }
 }

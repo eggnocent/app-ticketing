@@ -5,6 +5,7 @@ namespace Tests\Feature\EventModule;
 use App\Models\User;
 use App\Modules\EventModule\Models\Category;
 use App\Modules\EventModule\Models\Event;
+use App\Modules\TicketModule\Models\Ticket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -222,5 +223,17 @@ class EventAdminTest extends TestCase
             ->assertRedirect(route('admin.categories.index'));
 
         $this->assertDatabaseMissing('categories', ['id' => $category->id]);
+    }
+
+    public function test_event_with_tickets_cannot_be_deleted(): void
+    {
+        $event = Event::factory()->create();
+        Ticket::factory()->forEvent($event->id)->create();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->delete(route('admin.events.destroy', $event))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('events', ['id' => $event->id]);
     }
 }

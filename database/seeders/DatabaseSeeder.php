@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Modules\EventModule\Database\Seeders\CategorySeeder;
 use App\Modules\EventModule\Database\Seeders\EventSeeder;
+use App\Modules\TicketModule\Database\Seeders\TicketSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,6 +21,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategorySeeder::class,
             EventSeeder::class,
+            TicketSeeder::class,
         ]);
     }
 }

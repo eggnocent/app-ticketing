@@ -36,6 +36,20 @@ class EventInfoContractTest extends TestCase
         $this->assertNull(app(EventInfoContract::class)->getSummary(Str::uuid()->toString()));
     }
 
+    public function test_event_options_return_primitive_event_data(): void
+    {
+        $event = Event::factory()->draft()->create(['title' => 'Event Opsi']);
+
+        $options = app(EventInfoContract::class)->getEventOptions();
+
+        $this->assertSame([
+            'id' => $event->id,
+            'title' => $event->title,
+            'slug' => $event->slug,
+            'status' => $event->status,
+        ], collect($options)->firstWhere('id', $event->id));
+    }
+
     public function test_published_future_event_is_purchasable(): void
     {
         $event = Event::factory()->published()->create();

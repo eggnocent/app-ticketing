@@ -29,6 +29,9 @@
                             <a href="{{ route('admin.categories.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
                                 Kategori
                             </a>
+                            <a href="{{ route('admin.tickets.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">
+                                Tiket
+                            </a>
                         @endif
 
                         <span class="text-slate-500">{{ auth()->user()->name }}</span>
